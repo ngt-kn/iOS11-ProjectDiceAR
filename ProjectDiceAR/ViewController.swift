@@ -21,9 +21,8 @@ class ViewController: UIViewController, ARSCNViewDelegate {
      
         // Set the view's delegate
         sceneView.delegate = self
-        
+        // Enable lighting for 3d effect
         sceneView.autoenablesDefaultLighting = true
-
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -31,24 +30,23 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         // Create a session configuration
         let configuration = ARWorldTrackingConfiguration()
-
+        // Enable plane detection
         configuration.planeDetection = .horizontal
-        
         // Run the view's session
         sceneView.session.run(configuration)
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        
         // Pause the view's session
         sceneView.session.pause()
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         if let touch = touches.first {
+            // create new constant touch location with first location
             let touchLocation = touch.location(in: sceneView)
-            
+        
             let results = sceneView.hitTest(touchLocation, types: .existingPlaneUsingExtent)
             
             if let hitResult = results.first {
@@ -57,11 +55,12 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         }
     }
     
+    // Places dice on plane of touch location
     func addDice(atLocation location: ARHitTestResult) {
         // Create a new scene
         let diceScene = SCNScene(named: "art.scnassets/diceCollada.scn")!
         
-        // place dice on plane
+        // place dice on plane, will recusivley search for name
         if let diceNode = diceScene.rootNode.childNode(withName: "Dice", recursively: true) {
             diceNode.position = SCNVector3(
                 location.worldTransform.columns.3.x,
@@ -72,11 +71,10 @@ class ViewController: UIViewController, ARSCNViewDelegate {
             sceneView.scene.rootNode.addChildNode(diceNode)
             
             roll(dice: diceNode)
-            
         }
-        
     }
     
+    // re-rolls all placed die
     func rollAll() {
         if !diceArray.isEmpty {
             for dice in diceArray {
@@ -85,11 +83,13 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         }
     }
     
+    // rolls one dice
     func roll(dice: SCNNode) {
         // random rotation for x and y axis
         let randomX = Float(arc4random_uniform(4) + 1) * (Float.pi/2)
         let randomZ = Float(arc4random_uniform(4) + 1) * (Float.pi/2)
         
+        // rotation animation
         dice.runAction(
             SCNAction.rotateBy(
                 x: CGFloat(randomX * 5),
@@ -100,15 +100,17 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         )
     }
     
+    // roll all dice
     @IBAction func rollAgain(_ sender: UIBarButtonItem) {
         rollAll()
     }
     
+    // roll all dice shake gesture
     override func motionEnded(_ motion: UIEventSubtype, with event: UIEvent?) {
         rollAll()
     }
-    
-    
+
+    // removes all dice in array from parent node
     @IBAction func removeAllDice(_ sender: UIBarButtonItem) {
         if !diceArray.isEmpty {
             for dice in diceArray {
@@ -116,7 +118,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
             }
         }
     }
-    
+
     //MARK: - ARkit sceneView delegate methods
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
         
@@ -128,7 +130,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         node.addChildNode(planeNode)
     }
-    
+
     //MARK: - Plane creation methods
     
     func createPlane(withPlaneAnchor planeAnchor: ARPlaneAnchor) -> SCNNode {
@@ -149,8 +151,5 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         planeNode.geometry = plane
         
         return planeNode
-
     }
-    
-    
 }
