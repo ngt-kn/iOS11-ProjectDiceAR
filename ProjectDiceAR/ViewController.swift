@@ -21,20 +21,25 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         sceneView.delegate = self
         
         // Initialize new geometry object
-        let cube = SCNBox(width: 0.1, height: 0.1, length: 0.1, chamferRadius: 0.01)
+        //let cube = SCNBox(width: 0.1, height: 0.1, length: 0.1, chamferRadius: 0.01)
+        
+        let sphere = SCNSphere(radius: 0.2)
+        
+        
         // declare new material for object texture
         let material = SCNMaterial()
         // set the color
-        material.diffuse.contents = UIColor.red
+        //material.diffuse.contents = UIColor.red
+        material.diffuse.contents = UIImage(named: "art.scnassets/2k_moon.jpg")
         // add to object
-        cube.materials = [material]
+        sphere.materials = [material]
         
         // node determines placement of object x, y, z axis
         let node = SCNNode()
         // set position of object x, y, z
         node.position = SCNVector3(1, 0.1, -0.5 )
         // assign the bode a geometry object to display
-        node.geometry = cube
+        node.geometry = sphere
         
         sceneView.scene.rootNode.addChildNode(node)
         
