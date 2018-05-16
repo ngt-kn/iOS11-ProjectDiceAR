@@ -17,11 +17,13 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        self.sceneView.debugOptions = [ARSCNDebugOptions.showFeaturePoints]
+        
         // Set the view's delegate
         sceneView.delegate = self
         
         // Initialize new geometry object
-        let cube = SCNBox(width: 0.1, height: 0.1, length: 0.1, chamferRadius: 0.01)
+//        let cube = SCNBox(width: 0.1, height: 0.1, length: 0.1, chamferRadius: 0.01)
         
 //        let sphere = SCNSphere(radius: 0.2)
 //
@@ -46,14 +48,14 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         sceneView.autoenablesDefaultLighting = true
         
         // Create a new scene
-        let diceScene = SCNScene(named: "art.scnassets/diceCollada.scn")!
-
-        if let diceNode = diceScene.rootNode.childNode(withName: "Dice", recursively: true) {
-        
-            diceNode.position = SCNVector3(0, 0, -0.1)
-        
-            sceneView.scene.rootNode.addChildNode(diceNode)
-        }
+//        let diceScene = SCNScene(named: "art.scnassets/diceCollada.scn")!
+//
+//        if let diceNode = diceScene.rootNode.childNode(withName: "Dice", recursively: true) {
+//
+//            diceNode.position = SCNVector3(0, 0, -0.1)
+//
+//            sceneView.scene.rootNode.addChildNode(diceNode)
+//        }
         
 
     }
@@ -64,6 +66,8 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         // Create a session configuration
         let configuration = ARWorldTrackingConfiguration()
 
+        configuration.planeDetection = .horizontal
+        
         // Run the view's session
         sceneView.session.run(configuration)
     }
@@ -73,5 +77,48 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         // Pause the view's session
         sceneView.session.pause()
+    }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if let touch = touches.first {
+            let touchLocation = touch.location(in: sceneView)
+            
+            let results = sceneView.hitTest(touchLocation, types: .existingPlaneUsingExtent)
+            
+            if !results.isEmpty {
+                print("Touched a plane")
+            } else {
+                print("touched somewhere else")
+            }
+        }
+    }
+    
+    // ARkit delegate
+    func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
+        if anchor is ARPlaneAnchor {
+            // Declare a new anchor
+            let planeAnchor = anchor as! ARPlaneAnchor
+            //Initialze a plane size
+            let plane = SCNPlane(width: CGFloat(planeAnchor.extent.x), height: CGFloat(planeAnchor.extent.z))
+            
+            // declare a new node
+            let planeNode = SCNNode()
+            // set the planceNodes positon
+            planeNode.position = SCNVector3Make(planeAnchor.center.x, 0, planeAnchor.center.z)
+            // Tansform the plane node from vertical to horizontal by rotating its angle
+            planeNode.transform = SCNMatrix4MakeRotation(-Float.pi/2, 1, 0, 0)
+            
+            let gridMaterial = SCNMaterial()
+            gridMaterial.diffuse.contents = UIImage(named: "art.scnassets/grid.png")
+            
+            plane.materials = [gridMaterial]
+            
+            planeNode.geometry = plane
+            
+            node.addChildNode(planeNode)
+            
+        } else {
+            return
+        }
     }
 }
